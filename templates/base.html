@@ -1,0 +1,142 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="robots" content="noindex">
+    <meta name="googlebot" content="noindex">
+    <meta name="google-site-verification" content="t_Zz24NvzOJQ-PedapdFCB8GB9Ogku7IsX_12zQ8RIc" />
+    <title>{% block title %}{% endblock %}</title>
+
+    <script src="{% static "public/js/jquery-2.2.4.min.js" %}"></script>
+
+    <script src="{% static "public/js/bootstrap.min.js" %}"></script>
+    <link href=" {% static "public/css/bootstrap.min.css" %}" rel="stylesheet">
+    <link href=" {% static "public/datepicker/css/bootstrap-datepicker3.min.css" %}" rel="stylesheet">
+
+    <link href=" {% static "public/css/sb-admin.css" %}" rel="stylesheet">
+    <link href=" {% static "public/font-awesome/css/font-awesome.min.css" %}" rel="stylesheet" type="text/css">
+    <script src="{% static "public/js/hideseek/jquery.hideseek.min.js" %}"></script>
+      <script src="{% static "public/js/hideseek/initializers.js" %}"></script>
+    <script src="{% static "public/datepicker/js/bootstrap-datepicker.min.js" %}" charset="UTF-8"></script>
+    <script src="{% static "public/datepicker/locales/bootstrap-datepicker.zh-TW.min.js" %}" charset="UTF-8"></script>
+    
+    
+    {% block head_link %}{% endblock %}
+
+    <style>
+        @font-face {
+            font-family: SF_Bold;
+            src: url('/static/public/fonts/SanFrancisco/Bold.ttf');
+        }
+
+        @font-face {
+            font-family: SF_Regular;
+            src: url('/static/public/fonts/SanFrancisco/Regular.ttf');
+        }
+
+        @font-face {
+            font-family: SF_Thin;
+            src: url('/static/public/fonts/SanFrancisco/Thin.ttf');
+        }
+
+        @font-face {
+            font-family: SF_Ultra;
+            src: url('/static/public/fonts/SanFrancisco/Ultralight.ttf');
+        }
+        .bg {
+            background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('{% static "public/img/mountain_at_night.png" %}');
+            background-size: cover;
+            background-repeat: no-repeat;
+            min-height:calc(100vh - 50px);
+        }
+
+        .ct {
+            background-color: rgba(255,255,255,0);
+        }
+        
+        {% block head_style %}{% endblock %}
+    </style>
+</head>
+
+<body>
+
+    <script>
+        {% block script %}{% endblock %}
+        $(document).ready(function(){
+            {% block docready %}{% endblock %}
+        });
+    </script>
+    <div id="wrapper">
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/index">山服義診系統 (NDMC)</a>
+            </div>
+            <!-- Top Menu Items -->
+            <ul class="nav navbar-right top-nav">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user"></i> 用戶中心 <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            {% if request.user.is_authenticated == True %}
+                                <a href="/admin/logout"><i class="fa fa-fw fa-power-off"></i> 登出 ({{request.user}})</a>
+                            {% else %}
+                                <a href="/admin/logout"><i class="fa fa-fw fa-power-off"></i> 登入</a>
+                            {% endif %}
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+            <!-- Sidebar Menu Items - These collapse to the responsive navigation menu on small screens -->
+            <div class="collapse navbar-collapse navbar-ex1-collapse">
+                <ul class="nav navbar-nav side-nav">
+                    <li id="li_dashboard">
+                        <a href="/index"><i class="fa fa-fw fa-dashboard"></i> 總覽</a>
+                    </li>
+                    <li id="li_appointment">
+                        <a href="/appointment"><i class="fa fa-fw fa-edit"></i> 掛號</a>
+                    </li>
+                    <li id="li_clinic">
+                        <a href="/clinic/index"><i class="fa fa-fw fa-medkit"></i> 看診</a>
+                    </li>
+                    <li id="li_pharmacy">
+                        <a href="/pharmacy"><i class="fa fa-fw fa-check-square-o"></i> 領藥</a>
+                    </li>
+                    
+                    <li id="li_infomanage">
+                        <a href="/infomanage"><i class="fa fa-fw fa-desktop"></i> 資料庫管理</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="bg">
+
+            <h1 style="padding: 0.5em; color: white;">{% block content_title %}{% endblock %}</h1>
+            <hr style="color: white;">
+            <br/>
+
+        {% block content %}{% endblock %}
+
+        </div>
+
+        <div id="page-wrapper-nothing">
+
+        {% block empty-content %}{% endblock %}
+
+        </div>
+        <!-- /#page-wrapper -->
+
+    </div>
+    <!-- /#wrapper -->
+
+
+</body>
+
+</html>

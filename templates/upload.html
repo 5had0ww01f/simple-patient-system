@@ -1,0 +1,10 @@
+<html>
+<head>UPLOAD</head>
+<body>
+<form action="/upload/" method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" />
+</form>
+</body>
+</html>
