@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+{% block title %}資料庫管理{% endblock %}
+
+{% block docready %}
+
+$('#picker input').datepicker({
+    format: "yyyy-mm-dd",
+    todayBtn: true,
+    language: "zh-TW",
+    autoclose: true
+});
+
+$('button').click(function() {
+    if (this.id.split("_")[0] == "btnEdit")
+    {
+        $('#historyDetail').modal();
+
+        $('#hidden_history_log_id').val(this.id.split("_")[1]);
+        $('#pinfo_nick').html("");
+        {% for nick in nicknameList %}
+            if ("{{nick.unique_id}}" == this.id.split("_")[1]) $('#pinfo_nick').append("{{nick.nickname}}<br>")
+        {% endfor %}
+
+        {% for patient in patientData %}
+            if("{{patient.unique_id}}" == this.id.split("_")[1])
+            {
+                $('#pinfo_id').html( "{{patient.id_card_number}}" );
+            }
+        {% endfor %}
+
+        //$('#history_time').html(patientData);
+        $('#pinfo_patient').html(this.id.split("_")[1]);
+        //$('#history_problem_tmp').html(problem.replace(/<br>/g, "\n"));
+        //$('#history_solution_tmp').html(solution.replace(/<br>/g, "\n"));
+        //$('#history_medicine_tmp').html(medicine.replace(/<br>/g, "\n"));
+
+
+    }
+    //TODO: Avoid injection
+});
+
+$("#li_infomanage").addClass("active");
+{% endblock %}
+
+{% block content_title %}資料庫管理{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid ct">
+
+    <!--MODAL-->
+    <div class="modal fade" id="historyDetail">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">病人個人資料補登</h4>
+                </div>
+                <div class="modal-body">
+                    <form role="form" method="GET" action="/database/pinfo/">
+                        <input type="hidden" name="command" value="edit_pinfo">
+                        <input type="hidden" id="hidden_history_log_id" name="log_id">
+
+                        <div class="form-group">
+                            <label>病患</label>
+                            <p id="pinfo_patient" class="help-block">None</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label>暱稱</label>
+                            <p id="pinfo_nick" class="help-block">None</p>
+                            <div class="input-group col-lg-4">
+                                <input type="text" class="form-control" name="nickname">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default" type="submit">新增</button>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>身分證字號</label>
+                            <p id="pinfo_id" class="help-block">None</p>
+                        </div>
+
+                        <div class="alert alert-warning" role="alert">
+                            <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                            <span class="sr-only">Notice:</span>
+                            未完待續...
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">送出修改資料</button>
+
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">關閉視窗</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <ol class="breadcrumb">
+                <li>
+                    <i class="fa fa-dashboard"></i> <a href="/dashboard">資料庫管理</a>
+                </li>
+                <li class="active">
+                    <i class="fa fa-edit"></i> <a href="/appointment">新增記錄</a>
+                </li>
+            </ol>
+        </div>
+    </div>
+
+    <br>
+    
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="col-lg-12">
+                <div class="panel panel-success">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">新增病患資料</h3>
+                    </div>
+                    <div class="panel-body">
+                        <form role="form" action="/database" method="GET"> <!-- NEW -->
+                            <input type="hidden" name="command" value="add">
+                            <div class="form-group">
+                                <label>患者分區</label>
+                                <select class="form-control" name="location">
+                                    <option value="TY">抬耀(TY)</option>
+                                    <option value="PLW">平論文(PLW)</option>
+                                </select>
+                            </div>
+                            <!--
+                            <label>病患代碼(新增勿填)</label>
+                            <div class="form-group input-group">
+                                <span class="input-group-addon"><i class="fa fa-sort-numeric-asc"></i></span>
+                                <input type="text" class="form-control" name="uid" placeholder="(修改資料才要填)">
+                            </div>
+                            -->
+                            <label>稱呼</label>
+                            <div class="form-group input-group">
+                                <span class="input-group-addon"><i class="fa fa-user-plus"></i></span>
+                                <input type="text" class="form-control" name="name" placeholder="(必填) 任意稱呼即可，之後可新增">
+                            </div>
+                            <label>身分證字號</label>
+                            <div class="form-group input-group">
+                                <span class="input-group-addon"><i class="fa fa-credit-card"></i></span>
+                                <input type="text" class="form-control" name="id" placeholder="A000000000(選填)">
+                            </div>
+                            <label>性別 </label>
+                            <div class="form-group">
+                                <label class="radio-inline">
+                                    <input type="radio" name="gender" id="genderOption1" value="Male" checked="">男性
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" name="gender" id="genderOption2" value="Female">女性
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" name="gender" id="genderOption3" value="Other">其他
+                                </label>
+                            </div>
+                            <label>生日</label>
+                            <div id="picker" class="form-group input-group date">
+                                <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                                <input type="text" class="form-control" name="birthday" placeholder="非必填項目">
+                            </div>
+                            <label>血型</label>
+                            <div class="form-group">
+                                <select class="form-control" name="bloodtype">
+                                    <option>(Unknown)</option>
+                                    <option>A</option>
+                                    <option>B</option>
+                                    <option>O</option>
+                                    <option>AB</option>
+                                </select>
+                            </div>
+                            <br>
+                            <div class="form-group">
+                                <button type="reset" class="btn btn-danger btn-lg">重填</button>
+                                <button type="submit" class="btn btn-success btn-lg">送出</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-12">
+                <div class="panel panel-warning">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">病患資料補登</h3>
+                    </div>
+                    <div class="panel-body">
+                        <label>代號查詢</label>
+
+                        <div class="form-group input-group">
+                            <input id="search" type="text" class="form-control" data-list=".highlight_list" autocomplete="off" placeholder="暱稱查找">
+                            <span class="input-group-btn"><button class="btn btn-default" type="button"><i class="fa fa-search"></i></button></span>
+                        </div>
+                        <hr style="height: 2px; background-color: #f5f5f5;">
+
+
+                        <ul class="highlight_list" style="margin-left:0em; padding-left:0em;">
+                        {% for NL in nicknameList %}
+                            {% if NL.is_new == 1 %}
+                            <li style="list-style-type: none; margin-left:0em; padding-left:0em;">
+                                <a href="javascript:void(0)" data-toggle="collapse" data-target="#{{ NL.unique_id }}" class="list-group-item collapsed">
+                                    <i class="fa fa-fw fa-info-circle"></i> {{NL.nickname}} ({{NL.unique_id}}) <i class="fa fa-fw fa-caret-down"></i>
+                                    <button id="btnEdit_{{NL.unique_id}}" type="button" class="btn btn-primary btn-xs" style="float:right;"><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span> Edit </button>
+                                    <div id="{{NL.unique_id}}" class="collapse">
+                                        {% for subNL in nicknameList %}
+                                            {% if subNL.unique_id == NL.unique_id%}
+                                                {{subNL.nickname}}<br>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </a>
+                            </li>
+                            {% endif %}
+                        {% empty %}
+
+                        {% endfor %}
+                        </ul>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6"> <!-- RIGHT SIDE-->
+            <div class="col-lg-12">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">藥物登錄</h3>
+                    </div>
+                    <div class="panel-body">
+                        <form role="form" action="/database" method="GET"> <!-- NEW -->
+                            <input type="hidden" name="command" value="add_medicine">
+                            <label>藥名</label>
+                            <div class="form-group input-group">
+                                <span class="input-group-addon"><i class="fa fa-user-plus"></i></span>
+                                <input type="text" class="form-control" name="medicine_name" placeholder="Cephalexin / Keflex (500mg)">
+                            </div>
+                            <label>單位</label>
+                            <div class="form-group input-group">
+                                <span class="input-group-addon"><i class="fa fa-credit-card"></i></span>
+                                <input type="text" class="form-control" name="medicine_unit" placeholder="CAP">
+                            </div>
+                            <label>數量</label>
+                            <div class="form-group input-group">
+                                <span class="input-group-addon"><i class="fa fa-credit-card"></i></span>
+                                <input type="text" class="form-control" name="medicine_count" placeholder="100">
+                            </div>
+                            <label>有效期限(西元)</label>
+                            <div id="picker" class="form-group input-group date">
+                                <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                                <input type="text" class="form-control" name="medicine_expiry" placeholder="1970-01-01">
+                            </div>
+                            <br>
+                            <div class="form-group">
+                                <button type="reset" class="btn btn-danger btn-lg">重填</button>
+                                <button type="submit" class="btn btn-success btn-lg">送出</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-12">
+                <div class="panel panel-warning">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">藥物批次登錄</h3>
+                    </div>
+                    <div class="panel-body">
+                        <form role="form" action="/database" method="GET"> <!-- NEW -->
+                            <input type="hidden" name="command" value="add_medicine_multi">
+                            <textarea name="medicine_list" class="form-control" rows="5" placeholder="藥名,數量,單位(多行)"></textarea>
+                            <br><br>
+                            <div class="form-group">
+                                <button type="reset" class="btn btn-danger btn-lg">重填</button>
+                                <button type="submit" class="btn btn-success btn-lg">送出</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        
+    </div>
+    <!-- /.row -->
+
+</div>
+<!-- /.container-fluid -->
+{% endblock %}

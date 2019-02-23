@@ -1,0 +1,704 @@
+{% extends 'base.html' %}
+{% block title %}診間{% endblock %}
+
+{% block script %}
+function showHistoryDetailModal(logId, problem,solution,medicine){
+    $('#historyDetail').modal();
+
+    $('#hidden_history_log_id').val(logId);
+
+    $('#history_date').html(logId.substr(0,4)+"/"+logId.substr(4,2)+"/"+logId.substr(6,2));
+    $('#history_time').html(logId.substr(8,2)+":"+logId.substr(10,2)+":"+logId.substr(12,2));
+    $('#history_patient').html(logId.split("_")[1]);
+    $('#history_problem_tmp').html(problem.replace(/<br>/g, "\n"));
+    $('#history_solution_tmp').html(solution.replace(/<br>/g, "\n"));
+    $('#history_medicine_tmp').html(medicine.replace(/<br>/g, "\n"));
+
+    //TODO: Avoid injection
+}
+{% endblock %}
+
+{% block docready %}
+
+$('[data-toggle="tooltip"]').tooltip();
+$("button").click(function() {
+    function showHistory(patientId)
+    {
+        if(patientId==0)
+        {
+            $("#no-history").hide();
+            $("div[class~='historyCard']").each(function(){$(this).hide(50);})
+            $("#no-history").show();
+            $("#historyPanelTitle").html("歷史病例");
+        }
+        else
+        {
+            var selector = "div[class~='"+patientId+"']";
+            $(selector).each(function(){$(this).show(100);})
+            $("#no-history").hide();
+            $("#historyPanelTitle").html("歷史病例 ("+patientId+")");
+        }
+    }
+
+    if(this.id.split("_")[2]=="Write") //Select this patient
+    {
+        $("#gm_notice").hide();
+        $("#gm_chart").show();
+
+        $('tr').css('background-color','');
+
+        console.log($(this).parent().parent().css('background-color','#f2f2f2'));
+
+        var a=this.id.split("_")[0]+"_"+this.id.split("_")[1];
+        document.getElementById("input_log_id").value=a;
+        document.getElementById("hidden_input_log_id").value=a;
+        showHistory(0);
+        showHistory(this.id.split("_")[1]);
+    }
+    else if(this.id.split("_")[2]=="Skip")
+    {
+        logId = this.id.split("_")[0]+'_'+this.id.split("_")[1];
+        document.location = "/database/del/?command=del_patient&log_id="+logId;
+    }
+});
+
+function refreshDrug()
+{
+    //console.log('refreshing...');
+    $('#preview').html("");
+    $('input:checked').each(function () {
+        checked_count = $(this).parent().children("input[class~='for_prev_count']").val();
+        checked_unit = $(this).parent().children("b[class~='for_prev_unit']").html();
+        checked_name = $(this).parent().parent().children("td[class~='for_prev_name']").html()
+        checked_id = $(this).parent().parent().children("th").html()
+        //console.log(checked_count+"+"+checked_name+"+"+checked_unit);
+        //this.children('td')
+        $('#preview').append(checked_id+"*"+checked_count+"_  "+checked_name+" : "+checked_count+" "+checked_unit+"\n"); // "this" is the current element in the loop
+    });
+    if($('#preview').html() == "") $('#preview').html("本案未開藥");
+}
+
+setInterval(function(){refreshDrug();}, 888);
+
+$(document).mouseup(function(){
+    refreshDrug();
+})
+
+
+
+$("#li_clinic").addClass("active");
+
+{% endblock %}
+
+{% block head_style %}
+.historyCard{
+    display:none;
+}
+{% endblock %}
+
+{% block content_title %}診間{% endblock %}
+
+{% block content %}
+
+<script>
+
+
+</script>
+
+<div class="container-fluid ct">
+
+    <div class="modal fade" id="historyDetail">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">歷史紀錄編輯/檢視</h4>
+                </div>
+                <div class="modal-body">
+                    <form role="form" method="GET" action="/database/cure/">
+                        <input type="hidden" name="command" value="cure">
+                        <input type="hidden" id="hidden_history_log_id" name="log_id">
+
+                        <div class="form-group">
+                            <label>患者</label>
+                            <p id="history_patient" class="help-block">None</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label>看診日期</label>
+                            <p id="history_date" class="help-block">None</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label>看診時間</label>
+                            <p id="history_time" class="help-block">None</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label>主述</label>
+                            <textarea id="history_problem_tmp" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>判斷與治療</label>
+                            <textarea id="history_solution_tmp" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>藥物處方簽</label>
+                            <textarea id="history_medicine_tmp" class="form-control" rows="3" disabled></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">送出修改資料</button>
+
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">關閉視窗</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row">
+        <div class="col-lg-12">
+            <ol class="breadcrumb">
+                <li>
+                    <i class="fa fa-dashboard"></i> <a href="/clinic/index/">診間</a>
+                </li>
+                {% if subject == "general_medicine" %}
+                    <li>
+                        <i class="fa fa-dashboard"></i> <a href="/clinic/general_medicine/">內科</a>
+                    </li>
+                {% elif subject == "dentistry" %}
+                    <li>
+                        <i class="fa fa-dashboard"></i> <a href="/clinic/dentistry/">牙科</a>
+                    </li>
+                {% endif %}
+            </ol>
+        </div>
+    </div>
+
+    {% if subject == "index" %}
+        <div class="row">
+                <div class="col-xs-6">
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <a href="/clinic/general_medicine/" style="color:white;">
+                                    <div class="col-xs-3">
+                                        <img src="/static/public/img/stethoscope.png">
+                                    </div>
+                                    <div class="col-xs-9 text-right">
+                                        <div class="huge">{{M_waitCount}}</div>
+                                        <div>內科候診人數</div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                        <a href="/clinic/general_medicine/">
+                            <div class="panel-footer">
+                                <span class="pull-left">前往候診列表</span>
+                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                                <div class="clearfix"></div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-xs-6">
+                    <div class="panel panel-green">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <a href="/clinic/dentistry/" style="color:white;">
+                                    <div class="col-xs-3">
+                                        <img src="/static/public/img/tooth.png">
+                                    </div>
+                                    <div class="col-xs-9 text-right">
+                                        <div class="huge">{{DEN_waitCount}}</div>
+                                        <div>牙科候診人數</div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                        <a href="../dentistry">
+                            <div class="panel-footer">
+                                <span class="pull-left">前往候診列表</span>
+                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                                <div class="clearfix"></div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!--div class="col-xs-12">
+                    <div class="panel panel-yellow">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <a href="javascript:void(0);" style="color:white;">
+                                    <div class="col-xs-3">
+                                        <img src="/static/public/img/medical-history.png">
+                                    </div>
+                                    <div class="col-xs-9 text-right">
+                                        <div class="huge">{{DEN_waitCount}}</div>
+                                        <div>檢視/修改病例</div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                        <a href="javascript:void(0);">
+                            <div class="panel-footer">
+                                <span class="pull-left">本功能開發中~</span>
+                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                                <div class="clearfix"></div>
+                            </div>
+                        </a>
+                    </div>
+                </div-->
+
+
+            <div class="col-lg-6"><br></div>
+        </div>
+
+
+    {% elif subject == "general_medicine" %}
+
+        <div class="panel panel-info"> 
+            <div class="panel-heading">
+                <h3 class="panel-title">內科看診隊列</h3>
+            </div>
+            <table class="table"> 
+                <thead>
+                    <tr> 
+                        <th>序號</th>
+                        <th>代號(點擊查看稱呼)</th> 
+                        <th>掛號附註(點擊看全文)</th>
+                        <th>看診選項</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for patient in M_list %}
+                        {% if patient.is_done == 0 %}
+                            <tr style="">
+                                <th scope="row">{{ forloop.counter }}</th>
+                                <td>
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            {{ patient.unique_id }}
+                                            <span class="caret"></span>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            {% for name in nicknameTable %}
+                                            {% if name.unique_id in patient.log_id %} <li><a>{{ name.nickname }}</a></li>{% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </td>
+                                <td>血壓: {{ patient.bloodpressure }} | 血糖: {{ patient.bloodsugar }} <a href="javascript:void(0);" data-toggle="tooltip" data-placement="bottom" data-html="true" title="血壓: {{ patient.bloodpressure }}<br>血糖: {{ patient.bloodsugar }}<br>身高: {{ patient.height }} 公分<br>體重: {{ patient.weight }} 公斤<hr>其他事項: <br>{{ patient.remark }}" style="text-decoration:none;">→指我看細節</a></td>
+                                <td>
+                                    <button id="{{ patient.log_id }}_Write" type="button" class="btn btn-xs btn-success">選擇此病患</button>
+                                    <button id="{{ patient.log_id }}_Skip" type="button" class="btn btn-xs btn-danger">跳過此病人</button>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% empty %}
+                        <tr>
+                            <th scope="row">太棒了！沒有等待中的病患了。</th>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    {% endfor %}
+                </tbody> 
+            </table> 
+        </div>
+
+        <div class="panel panel-warning">
+            <div class="panel-heading">
+                <h3 class="panel-title" id="historyPanelTitle">歷史病例</h3>
+            </div>
+            <div class="panel-body">
+                <h5 id="no-history">(目前無資料顯示，選擇病患後會自動切換搜索)</h5>
+                <div class="row">
+                    {% for history in cureHistory %}
+                        <div class="col-xs-4 text-center historyCard {{ history.unique_id }}">
+                            <div class="thumbnail">
+                                <div class="caption">
+                                    <h4>日期: {{ history.timeDate }}</h4>
+                                    <h4>時間: {{ history.timeTime }}</h4>
+                                    <p>oh no, no detail data.</p>
+                                    <p><a href="javascript:showHistoryDetailModal( '{{ history.log_id }}','{{ history.problem_tmp }}','{{ history.solution_tmp }}','{{history.medicine_tmp}}' );" class="btn btn-primary" role="button">詳細資訊</a></p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div id="gm_notice" class="alert alert-success" role="alert">
+            <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+            <span class="sr-only">Notice:</span>
+            選擇病患才有診療單可填
+        </div>
+
+        <div id="gm_chart" class="panel panel-success" style="display: none;">
+            <div class="panel-heading">
+                <h3 class="panel-title">診療單</h3>
+            </div>
+            <div class="panel-body">
+                <form role="form" method="GET" action="/database/">
+                    <input type="hidden" name="command" value="cure">
+                    <input type="hidden" name="subject" value="M">
+                    <div class="form-group">
+                        <label>系統編號</label>
+                        <input id="input_log_id" class="form-control" disabled>
+                        <p class="help-block">點擊&lt;選擇此病患&gt;會自動填入</p>
+                        <input type="hidden" id="hidden_input_log_id" name="log_id">
+                    </div>
+
+                    <div class="form-group">
+                        <label>主述</label>
+                        <textarea name="problem_tmp" class="form-control" rows="3">(無)</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>判斷與治療</label>
+                        <textarea name="solution_tmp" class="form-control" rows="3">(無)</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <br>
+
+                        <div class="col-lg-6">
+                            <div class="panel panel-warning">
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">藥劑檢索</h3>
+                                </div>
+                                <div class="panel-body">
+                                    <label>藥名</label>
+
+                                    <div class="form-group input-group">
+                                        <input id="search" type="text" class="form-control" data-list=".search_list" autocomplete="off" placeholder="查找藥品">
+                                        <span class="input-group-btn"><button class="btn btn-default" type="button"><i class="fa fa-search"></i></button></span>
+                                    </div>
+                                    <p class="help-block">★ 上方可輸入藥名尋找，勾選並輸入數量即可</p>
+
+                                    <table class="table table-striped"> 
+                                        <thead> 
+                                            <tr> 
+                                                <th>ID</th> 
+                                                <th>勾選使用</th> 
+                                                <th>藥名</th> 
+                                                <th>剩餘量</th>
+                                            </tr> 
+                                        </thead> 
+                                        <tbody class="search_list" id="tr_list">
+                                            {% for med in medicine %}
+                                                <tr id="tr_med_{{med.id}}"> 
+                                                    <th scope="row">{{med.id}}</th> 
+                                                    <td>
+                                                        <input type="checkbox">
+                                                        <input class="for_prev_count" style="width:60px;" type="number" placeholder="數量">
+                                                        <b class="for_prev_unit">{{ med.medicine_unit }}</b>
+                                                    </td>
+                                                    <td class="for_prev_name">{{ med.medicine_name }}</td> 
+                                                    <td>{{ med.medicine_count }}</td> 
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="panel panel-info">
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">藥物處方簽(請於左方勾選，此處會自動更新)</h3>
+                                </div>
+                                <div class="panel-body">
+                                    <textarea id="preview" name="medicine_tmp" class="form-control" rows="5" placeholder="自動產生" style="resize: vertical;" readonly></textarea>
+                                    <br>
+                                    <button type="button" class="btn-default btn" onclick="javascript:void(0);">刷新</button>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="panel panel-info">
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">藥物處方簽修正附註</h3>
+                                </div>
+                                <div class="panel-body">
+                                    <textarea id="preview" name="medicine_tmp_appendix" class="form-control" rows="5" placeholder="若自動產生有誤(單位錯誤等)，於此註明" style="resize: vertical;"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <button type="submit" class="btn btn-default">送出資料</button>
+                        <button type="reset" class="btn btn-default">全部重填</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+            
+
+    {% elif subject == "dentistry" %}
+            <div class="panel panel-info">
+            <div class="panel-heading">牙科看診隊列</div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>序號</th>
+                        <th>代號(點擊查看稱呼)</th>
+                        <th>掛號附註(點擊看全文)</th>
+                        <th>看診選項</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for patient in DEN_list %}
+                        {% if patient.is_done == 0 %}
+                            <tr>
+                                <th scope="row">{{ forloop.counter }}</th>
+                                <td>
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            {{ patient.unique_id }}
+                                            <span class="caret"></span>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            {% for name in nicknameTable %}
+                                            {% if name.unique_id in patient.log_id %} <li><a>{{ name.nickname }}</a></li>{% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </td>
+                                <td>血壓: {{ patient.bloodpressure }} | 血糖: {{ patient.bloodsugar }} <a href="javascript:void(0);" data-toggle="tooltip" data-placement="bottom" data-html="true" title="血壓: {{ patient.bloodpressure }}<br>血糖: {{ patient.bloodsugar }}<br>身高: {{ patient.height }} 公分<br>體重: {{ patient.weight }} 公斤<hr>其他事項: <br>{{ patient.remark }}" style="text-decoration:none;">→指我看細節</a></td>
+                                <td>
+                                    <button id="{{ patient.log_id }}_Write" type="button" class="btn btn-xs btn-success">選擇此病患</button>
+                                    <button id="{{ patient.log_id }}_Skip" type="button" class="btn btn-xs btn-danger">跳過此病人</button>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% empty %}
+                        <tr>
+                            <th scope="row">太棒了！沒有等待中的病患了。</th>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="panel panel-warning">
+            <div class="panel-heading">
+                <h3 class="panel-title" id="historyPanelTitle">歷史病例</h3>
+            </div>
+            <div class="panel-body">
+                <h5 id="no-history">目前無資料顯示，選擇病患後會自動切換搜索</h5>
+                <div class="row">
+                    {% for history in cureHistory %}
+                        <div class="col-xs-4 text-center historyCard {{ history.unique_id }}">
+                            <div class="thumbnail">
+                                <div class="caption">
+                                    <h4>日期: {{ history.timeDate }}</h4>
+                                    <h4>時間: {{ history.timeTime }}</h4>
+                                    <p>oh no, no detail data.</p>
+                                    <p><a href="javascript:showHistoryDetailModal( '{{ history.log_id }}','{{ history.problem_tmp }}','{{ history.solution_tmp }}','{{history.medicine_tmp}}' );" class="btn btn-primary" role="button">詳細資訊</a></p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div id="gm_notice" class="alert alert-success" role="alert">
+            <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+            <span class="sr-only">Notice:</span>
+            選擇病患才有診療單可填
+        </div>
+
+        <div id="gm_chart" class="panel panel-success" style="display: none;">
+            <div class="panel-heading">
+                <h3 class="panel-title">診療單</h3>
+            </div>
+            <div class="panel-body">
+                <form role="form" method="GET" action="/database/">
+
+                    <input type="hidden" name="command" value="cure">
+                    <input type="hidden" name="subject" value="DEN">
+                    <div class="form-group">
+                        <label>系統編號</label>
+                        <input id="input_log_id" class="form-control" disabled>
+                        <p class="help-block">點擊<寫病例>會自動填入</p>
+                        <input type="hidden" id="hidden_input_log_id" name="log_id">
+                    </div>
+
+                    <div class="form-group">
+                        <label>主述</label>
+                        <textarea name="problem_tmp" class="form-control" rows="3">(無)</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>判斷與治療</label>
+                        <textarea name="solution_tmp" class="form-control" rows="3">(無)</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <br>
+
+                        <div class="col-lg-6">
+                            <div class="panel panel-warning">
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">藥劑檢索</h3>
+                                </div>
+                                <div class="panel-body">
+                                    <label>藥名</label>
+
+                                    <div class="form-group input-group">
+                                        <input id="search" type="text" class="form-control" data-list=".search_list" autocomplete="off" placeholder="查找藥品">
+                                        <span class="input-group-btn"><button class="btn btn-default" type="button"><i class="fa fa-search"></i></button></span>
+                                    </div>
+                                    <p class="help-block">★ 上方可輸入藥名尋找，勾選並輸入數量即可</p>
+
+                                    <table class="table table-striped"> 
+                                        <thead> 
+                                            <tr> 
+                                                <th>ID</th> 
+                                                <th>勾選使用</th> 
+                                                <th>藥名</th> 
+                                                <th>剩餘量</th>
+                                            </tr> 
+                                        </thead> 
+                                        <tbody class="search_list" id="tr_list">
+                                            {% for med in medicine %}
+                                                <tr id="tr_med_{{med.id}}"> 
+                                                    <th scope="row">{{med.id}}</th> 
+                                                    <td>
+                                                        <input type="checkbox">
+                                                        <input class="for_prev_count" style="width:60px;" type="number" placeholder="數量">
+                                                        <b class="for_prev_unit">{{ med.medicine_unit }}</b>
+                                                    </td>
+                                                    <td class="for_prev_name">{{ med.medicine_name }}</td> 
+                                                    <td>{{ med.medicine_count }}</td> 
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="panel panel-info">
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">藥物處方簽(請於左方勾選，此處會自動更新)</h3>
+                                </div>
+                                <div class="panel-body">
+                                    <textarea id="preview" name="medicine_tmp" class="form-control" rows="5" placeholder="自動產生" style="resize: vertical;" readonly></textarea>
+                                    <br>
+                                    <button type="button" class="btn-default btn" onclick="javascript:void(0);">刷新</button>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="panel panel-info">
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">藥物處方簽修正附註</h3>
+                                </div>
+                                <div class="panel-body">
+                                    <textarea id="preview" name="medicine_tmp_appendix" class="form-control" rows="5" placeholder="若自動產生有誤(單位錯誤等)，於此註明" style="resize: vertical;"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <button type="submit" class="btn btn-default">送出資料</button>
+                            <button type="reset" class="btn btn-default">全部重填</button>
+                        </div>
+                    </div>
+
+    {% elif subject == "fix" %}
+            <div class="panel panel-info">
+            <div class="panel-heading">牙科看診隊列</div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>序號</th>
+                        <th>代號(點擊查看稱呼)</th>
+                        <th>掛號附註(點擊看全文)</th>
+                        <th>看診選項</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for patient in DEN_list %}
+                        {% if patient.is_done == 0 %}
+                            <tr>
+                                <th scope="row">{{ forloop.counter }}</th>
+                                <td>{{ patient.unique_id }}</td>
+                                <td>血壓: {{ patient.bloodpressure }} | 血糖: {{ patient.bloodsugar }} <a>...more</a></td>
+                                <td>
+                                    <button id="{{ patient.log_id }}_Write" type="button" class="btn btn-xs btn-success">寫病歷</button>
+                                    <button type="button" class="btn btn-xs btn-danger">跳過</button>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% empty %}
+                        <tr>
+                            <th scope="row">太棒了！沒有等待中的病患了。</th>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="panel panel-success">
+            <div class="panel-heading">
+                <h3 class="panel-title">病歷表</h3>
+            </div>
+            <div class="panel-body">
+                <form role="form" method="GET" action="/database/cure/">
+
+                    <input type="hidden" name="command" value="cure">
+                    <div class="form-group">
+                        <label>系統編號</label>
+                        <input id="input_log_id" class="form-control" disabled>
+                        <p class="help-block">點擊<寫病例>會自動填入</p>
+                        <input type="hidden" id="hidden_input_log_id" name="log_id">
+                    </div>
+
+                    <div class="form-group">
+                        <label>主述</label>
+                        <textarea name="problem_tmp" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>判斷與治療</label>
+                        <textarea name="solution_tmp" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>藥物處方簽</label>
+                        <textarea name="medicine_tmp" class="form-control" rows="3"></textarea>
+                    </div>
+
+
+    {% else %}
+        <h1> Error </h1>
+    {% endif %}
+
+
+
+</div>
+<!-- /.container-fluid -->
+{% endblock %}

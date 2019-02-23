@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}首頁{% endblock %}
+
+{% block docready %}
+$("#li_dashboard").addClass("active");
+$("#page-wrapper").hide();
+{% endblock %}
+
+{% block empty-content %}
+
+<div style="background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('/static/public/img/wolf.png'); background-repeat:no-repeat; background-size:cover; height:calc(100vh - 50px);">
+    <div class="col-lg-12" style="padding-top:50px;padding-left:50px;color:white;font-family:SF_Thin;">
+        <h1 style="font-family:SF_Bold; font-size:45px;">SanFu Patient System</h1>
+        <h1 style="font-family:SF_Regular; font-size:17px;">> code by ShadowWolf</h1>
+        <hr style="width:100%;margin-left:-20px;">
+        <h4><b>本系統</b>來自<u>國防醫學院山地醫療服務隊</u>，</h4>
+        <h4><b>目的</b>是為了即使在健保系統之外，也能有一個<u>定期追蹤紀錄的工具</u>。</h4>
+        <h4><b>許多功能</b>將會利用時間<u>陸續開發完成</u>！</h4>
+    </div>
+
+    <div class="col-lg-6 col-lg-offset-3" style="margin-top: 50px; padding-left: 20px; padding-bottom: 20px; color: white; font-family: SF_Bold; border: 1px solid white;">
+        <h3>本系統不對外公開資料庫與使用權限，所有資料蒐集亦經當事人同意，且絕不用於<b>非研究</b>或<b>非增進使用對象醫療品質</b>之用途。</h3>
+    </div>
+
+</div>
+
+{% endblock %}
